@@ -13,7 +13,7 @@ import numpy as np
 
 # SOME GLOBAL DEFINITIONS AND VARAIBLES
 local_path 	= '/home/pi/Python/DHT-11/diagram/'
-remote_path = '/var/www/html/fortuna/diagram'
+remote_path = '/var/www/html/YOUR-PATH-HERE/diagram'
 remote_user = 'pi'
 remote_host = 'nerdegutta.org'
 
