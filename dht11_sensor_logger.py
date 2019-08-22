@@ -13,7 +13,7 @@ import numpy as np
 
 # SOME GLOBAL DEFINITIONS AND VARAIBLES
 local_path 	= '/home/pi/Python/DHT-11/diagram/'
-remote_path = '/var/www/html/YOUR-PATH-HERE/diagram'
+remote_path = '/var/www/html/fortuna/diagram'
 remote_user = 'pi'
 remote_host = 'nerdegutta.org'
 
@@ -74,7 +74,7 @@ def make_s1_temp_diagram():
 	plt.bar(x,y, color='g', align='center')
 	plt.title('Temperature '+dom+' '+date+'. '+month)
 	plt.ylabel('Temperature')
-	plt.xlabel('Minute')
+	plt.xlabel('Hour')
 	plt.savefig(local_path + sensor1_t_filename+'.png')
 
 # This function makes the humidity diagram
@@ -85,7 +85,7 @@ def make_s1_humid_diagram():
 	plt.bar(x,y, color='r', align='center')
 	plt.title('Humidity '+dom+' '+date+'. '+month)
 	plt.ylabel('Humidity')
-	plt.xlabel('Minute')
+	plt.xlabel('Hour')
 	plt.savefig(local_path + sensor1_h_filename+'.png')	
 
 # This function uploads both diagrams
