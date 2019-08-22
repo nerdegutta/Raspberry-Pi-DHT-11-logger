@@ -10,3 +10,5 @@ make_s1_temp_diagram - uses matlab to make a bar graph
 upload_files - this function copies the graphfiles with scp.
 
 You'll need to make yourself an id_rsa.pub key and upload it the the remote server, in order to get scp to work without asking for password.
+
+Use crontab to run the script as often as you want.
