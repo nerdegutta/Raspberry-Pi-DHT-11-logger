@@ -37,6 +37,7 @@ def make_filename():
 	global sensor1_t_filename
 	global sensor1_h_filename
 	global minute
+	global hour
 	global date
 	global dom
 	global month
