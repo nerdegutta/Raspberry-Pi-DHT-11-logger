@@ -3,10 +3,8 @@
 # IMPORTS
 import Adafruit_DHT
 import time
-import requests
 import os
 from datetime import datetime
-
 from matplotlib import pyplot as plt
 from matplotlib import style
 import numpy as np
@@ -26,11 +24,23 @@ remote_host = 'nerdegutta.org'
 
 # FUNCTIONS
 # This function reads the sensor that is connected to pin9/ GPIO 4
+# If humidity is greater than 100, it takes a new reading.
 def read_sensor_1():
 	global humid_0
 	global temp_0
 	humid_0, temp_0 = Adafruit_DHT.read_retry(11,4)
 	time.sleep(2)
+	while True:
+		if humid_0 > 100:			
+			temp_log_data = log_timestamp+' - Invalid humidity. Making a new reading.\n'
+			print (temp_log_data)
+			write_log_file(temp_log_data)
+			read_sensor_1()
+		else:	
+			temp_log_data = log_timestamp+' - Data from sensor are read and valid.\n' 
+			print (temp_log_data)
+			write_log_file(temp_log_data)
+			break
 
 # This functions makes the filname of the log file
 def make_filename():
@@ -38,15 +48,17 @@ def make_filename():
 	global sensor1_h_filename
 	global minute
 	global hour
-	global date
+	global today
 	global dom
 	global month
+	global log_timestamp
 	now = datetime.now()
 	minute = now.strftime('%M')	
 	hour = now.strftime('%H')
-	date = now.strftime('%d')
+	today = now.strftime('%d')
 	dom = now.strftime('%A')
 	month = now.strftime('%B')
+	log_timestamp = now.strftime('%H:%M:%S')
 	s1t_filename = now.strftime('%d-%m-%y')
 	s1h_filename = now.strftime('%d-%m-%y')
 	sensor1_t_filename = 's1t-'+s1t_filename
@@ -58,6 +70,8 @@ def save_sensor1_t():
 	log_file.write(hour)
 	log_file.write(',{0:0.0f}\n'.format(temp_0))
 	log_file.close()
+	temp_log_data = log_timestamp+' - Temperature file updated.\n'
+	write_log_file(temp_log_data)	
 
 # This function saves the humidity from Sensor 1
 def save_sensor1_h():	
@@ -65,6 +79,8 @@ def save_sensor1_h():
 	log_file.write(hour)
 	log_file.write(',{0:0.0f}\n'.format(humid_0))
 	log_file.close()
+	temp_log_data = log_timestamp+' - Humidity file updated.\n'
+	write_log_file(temp_log_data)
 
 # This dunction makes the temperature diagram
 def make_s1_temp_diagram():
@@ -72,10 +88,12 @@ def make_s1_temp_diagram():
 		unpack = True,
 		delimiter = ',')
 	plt.bar(x,y, color='g', align='center')
-	plt.title('Temperature '+dom+' '+date+'. '+month)
+	plt.title('Temperature '+dom+' '+today+'. '+month)
 	plt.ylabel('Temperature')
 	plt.xlabel('Hour')
 	plt.savefig(local_path + sensor1_t_filename+'.png')
+	temp_log_data = log_timestamp+' - '+local_path+sensor1_t_filename+'.png - File made.\n'
+	write_log_file(temp_log_data)
 
 # This function makes the humidity diagram
 def make_s1_humid_diagram():
@@ -83,59 +101,119 @@ def make_s1_humid_diagram():
 		unpack = True,
 		delimiter = ',')
 	plt.bar(x,y, color='r', align='center')
-	plt.title('Humidity '+dom+' '+date+'. '+month)
+	plt.title('Humidity '+dom+' '+today+'. '+month)
 	plt.ylabel('Humidity')
 	plt.xlabel('Hour')
 	plt.savefig(local_path + sensor1_h_filename+'.png')	
+	temp_log_data = log_timestamp+' - '+local_path+sensor1_h_filename+'.png - File made.\n'
+	write_log_file(temp_log_data)	
 
 # This function uploads both diagrams
 def upload_files():
-	print ('Upload')
+	temp_log_data = log_timestamp+' - Start copy to remote host.\n'
+	print (temp_log_data)
+	write_log_file(temp_log_data)
+
 	temp_path = local_path + sensor1_t_filename + '.png'	
 	output = os.popen("scp %s %s@%s:%s" % (temp_path,remote_user,remote_host,remote_path))
-	temp_path = local_path + sensor1_h_filename + '.png'	
-	output = os.popen("scp %s %s@%s:%s" % (temp_path,remote_user,remote_host,remote_path))	
-	print ('Done upload')
+	temp_log_data = log_timestamp+' -"scp %s %s@%s:%s" %'+temp_path+', '+remote_user+', '+remote_host+', '+remote_path+'\n'
+	write_log_file(temp_log_data)
+
+	temp_path = local_path + sensor1_h_filename + '.png'
+	output = os.popen("scp %s %s@%s:%s" % (temp_path,remote_user,remote_host,remote_path))
+	temp_log_data = log_timestamp+' -"scp %s %s@%s:%s" %'+temp_path+', '+remote_user+', '+remote_host+', '+remote_path+'\n'
+	write_log_file(temp_log_data)	
+
+	temp_log_data = log_timestamp+' - Finished copy to remote host.\n'
+	print (temp_log_data)
+	write_log_file(temp_log_data)
 
 # This function checks if the temperature file exists
 def check_if_temp_file_exists():
 	check_file = local_path+sensor1_t_filename+'.txt'
-	print (check_file)
 	try:
 		f = open(check_file)
 		f.close()
-		print ('File found.')
+		temp_log_data = log_timestamp + ' - '+check_file+' - File found.\n'
+		print (temp_log_data)
+		write_log_file(temp_log_data)
 	except FileNotFoundError:
-		print('File not found. Let\'s make it.')
 		temp_file = open(check_file, 'w')
+		temp_file.close()
+		temp_log_data = log_timestamp+' - '+check_file+' - File not found, but we made it.\n'
+		print (temp_log_data)
 
 # This function checks if the humidity file exists
 def check_if_humid_file_exists():
 	check_file = local_path+sensor1_h_filename+'.txt'
-	print (check_file)
 	try:
 		f = open(check_file)
-		f.close()
-		print ('File found.')
+		f.close()		
+		temp_log_data = log_timestamp + ' - '+check_file+' - File found.\n'
+		write_log_file(temp_log_data)		
+		print (temp_log_data)
 	except FileNotFoundError:
-		print('File not found. Let\'s make it.')
-		temp_file = open(check_file, 'w')		
+		temp_file = open(check_file, 'w')
+		temp_file.close()
+		temp_log_data = log_timestamp+' - '+check_file+' - File not found, but we made it.\n'
+		write_log_file(temp_log_data)
+		print (temp_log_data)
+
+# This function opens a log file.
+def open_systemlog_file():
+	global system_log_file
+	global logfile_data
+	system_log_file = local_path+today+'_logfile.log'
+	print (log_timestamp+' - '+system_log_file+'\n')
+	try:
+		f = open(system_log_file)		
+		f.close()
+		print (log_timestamp+' - Log file found.\n')
+		temp_log_data = log_timestamp + ' - Log started.\n'
+		write_log_file(temp_log_data)
+	except FileNotFoundError:
+		print (log_timestamp+' - File not found. Let\'s make a log file.\n')
+		temp_file = open(system_log_file, 'w')
+		temp_log_data = log_timestamp + ' - Log started.\n'
+		write_log_file(temp_log_data)
+		temp_file.close()
+
+# This function write data to the log file
+def write_log_file(logfile_data):
+	temp_log_file = open(system_log_file, 'a')
+	temp_log_file.write(logfile_data)
+	temp_log_file.close()
 
 # This is the main function	
 def main():
-	make_filename()
+	make_filename()	
+	open_systemlog_file()	
 	check_if_temp_file_exists()
 	check_if_humid_file_exists()
-
 	read_sensor_1()	
-	print ('Sensor 0: Temp={0:0.0f}*C Humidity={1:0.0f}%'.format(temp_0, humid_0))
-	print (sensor1_t_filename)
-	print (sensor1_h_filename)
+
+	temp_log_data = log_timestamp+' - Sensor 0: Temp={0:0.0f}*C Humidity={1:0.0f}%\n'.format(temp_0, humid_0)
+	write_log_file(temp_log_data)
+	print (temp_log_data)
+
+	temp_log_data = log_timestamp+' - Temperature filename: '+sensor1_t_filename+'\n'
+	write_log_file(temp_log_data)
+	print (temp_log_data)
+
+	temp_log_data = log_timestamp+' - Humidity filename: '+sensor1_h_filename+'\n'
+	write_log_file(temp_log_data)
+	print (temp_log_data)
+
 	save_sensor1_t()
 	save_sensor1_h()
 	make_s1_temp_diagram()
 	make_s1_humid_diagram()
 	upload_files()
+	temp_log_data = log_timestamp+' - All done. Finnishing.\n'
+	write_log_file(temp_log_data)
+	print (temp_log_data)
+
+
 
 # By adding this, the entire file can be used as a module
 if __name__ == "__main__":
