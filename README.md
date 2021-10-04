@@ -21,3 +21,4 @@ You'll need to make yourself an id_rsa.pub key and upload it the the remote serv
 
 Use crontab to run the script as often as you want.
 
+You can read more at http://nerdegutta.org
